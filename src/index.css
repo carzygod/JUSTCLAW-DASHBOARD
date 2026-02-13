@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  /* Darkest background - very deep blue/black */
+  --color-claw-950: #02042a;
+  /* Card background - deep blue */
+  --color-claw-900: #04074a;
+  /* Secondary background / elements */
+  --color-claw-800: #04146f;
+  /* Borders / Inputs */
+  --color-claw-700: #1a237e;
+  /* Hover states */
+  --color-claw-600: #283593;
+  /* Primary Action */
+  --color-claw-500: #3939c9;
+  /* Light Blue Accent */
+  --color-claw-400: #6dabfa;
+  /* Purple Accent */
+  --color-claw-300: #bc95fb;
+
+  --shadow-neumorphic: 20px 20px 60px #010214, -20px -20px 60px #050854;
+  --shadow-neumorphic-sm: 5px 5px 10px #010214, -5px -5px 10px #050854;
+  --shadow-neumorphic-inner: inset 5px 5px 10px #010214, inset -5px -5px 10px #050854;
+  --shadow-glass: 0 8px 32px 0 rgba(4, 7, 74, 0.37);
+
+  --backdrop-blur-glass: blur(20px);
+}
+
+@layer base {
+  body {
+    @apply bg-claw-950 text-gray-200 antialiased;
+    font-family: system-ui, -apple-system, sans-serif;
+    /* Updated gradient with purple accent */
+    background-image:
+      radial-gradient(circle at 15% 50%, rgba(57, 57, 201, 0.15), transparent 30%),
+      radial-gradient(circle at 85% 30%, rgba(188, 149, 251, 0.1), transparent 30%);
+    background-attachment: fixed;
+  }
+}
+
+@utility glass {
+  background: rgba(4, 7, 74, 0.4);
+  backdrop-filter: var(--backdrop-blur-glass);
+  -webkit-backdrop-filter: var(--backdrop-blur-glass);
+  border: 1px solid rgba(109, 171, 250, 0.1);
+  box-shadow: var(--shadow-glass);
+}
