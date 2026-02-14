@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { Input } from "../../components/ui/Input"
-import { CreditCard, DollarSign, FileText, QrCode } from "lucide-react"
+import { CreditCard, DollarSign, FileText, QrCode, Loader2 } from "lucide-react"
 import { cn } from "../../utils"
+import { fetchApi } from "../../api"
 
 export default function Profile() {
     const [showAddFunds, setShowAddFunds] = useState(false)
@@ -11,18 +12,32 @@ export default function Profile() {
     const [amount, setAmount] = useState("")
     const [chain, setChain] = useState("ETH")
     const [token, setToken] = useState("USDT")
+    const [profile, setProfile] = useState(null)
+    const [loading, setLoading] = useState(true)
 
-    const mockInvoices = [
-        { id: "INV-001", date: "2023-10-01", amount: "$29.00", status: "Paid" },
-        { id: "INV-002", date: "2023-09-01", amount: "$29.00", status: "Paid" },
-        { id: "INV-003", date: "2023-08-01", amount: "$29.00", status: "Paid" },
-    ]
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                // Fetch profile and transactions in parallel
+                // Note: In a real app, you might want separate endpoints or a composite one
+                // For now, let's assume /auth/me returns balance and we use /transactions for history
+                const [userRes, transactionsRes] = await Promise.all([
+                    fetchApi('/user/profile'),
+                    fetchApi('/transactions/me')
+                ]);
 
-    const mockConsumption = [
-        { date: "Oct 1", usage: "12 hours", cost: "$0.50" },
-        { date: "Oct 2", usage: "24 hours", cost: "$1.00" },
-        { date: "Oct 3", usage: "24 hours", cost: "$1.00" },
-    ]
+                setProfile({
+                    ...userRes.data,
+                    transactions: transactionsRes.data || []
+                });
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProfile();
+    }, []);
 
     const chains = ["ETH", "BSC", "SOL", "TRX"]
     const tokens = ["USDT", "USDC", "ETH", "BTC"]
@@ -37,6 +52,8 @@ export default function Profile() {
         setAmount("")
     }
 
+    if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-claw-400" size={40} /></div>
+
     return (
         <div className="space-y-8 relative">
             <h1 className="text-3xl font-bold text-white mb-6">Your Profile</h1>
@@ -45,7 +62,7 @@ export default function Profile() {
                 <Card className="flex flex-col justify-between">
                     <div>
                         <h3 className="text-gray-400 mb-2">Current Balance</h3>
-                        <div className="text-4xl font-bold text-white mb-4">$142.50</div>
+                        <div className="text-4xl font-bold text-white mb-4">${profile?.balance?.toFixed(2) || '0.00'}</div>
                     </div>
                     <div className="flex gap-4">
                         <Button className="flex-1" onClick={() => setShowAddFunds(true)}>Add Funds</Button>
@@ -72,36 +89,36 @@ export default function Profile() {
 
             <div className="grid md:grid-cols-2 gap-8">
                 <Card>
-                    <h3 className="text-xl font-bold text-white mb-6">Recent Invoices</h3>
+                    <h3 className="text-xl font-bold text-white mb-6">Recent Transactions</h3>
                     <div className="space-y-4">
-                        {mockInvoices.map((inv) => (
-                            <div key={inv.id} className="flex items-center justify-between p-3 bg-claw-900/40 rounded-lg border border-white/5">
+                        {profile?.transactions?.slice(0, 5).map((tx) => (
+                            <div key={tx._id} className="flex items-center justify-between p-3 bg-claw-900/40 rounded-lg border border-white/5">
                                 <div className="flex items-center gap-3">
                                     <FileText size={18} className="text-gray-400" />
                                     <div>
-                                        <div className="text-sm font-medium text-white">{inv.id}</div>
-                                        <div className="text-xs text-gray-500">{inv.date}</div>
+                                        <div className="text-sm font-medium text-white capitalize">{tx.type}</div>
+                                        <div className="text-xs text-gray-500">{new Date(tx.createdAt).toLocaleDateString()}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-white font-medium">{inv.amount}</span>
-                                    <span className="text-green-500 text-xs bg-green-500/10 px-2 py-1 rounded-full border border-green-500/20">{inv.status}</span>
+                                    <span className="text-white font-medium">${tx.amount.toFixed(2)}</span>
+                                    <span className={`text-xs px-2 py-1 rounded-full border ${tx.status === 'completed' ? 'text-green-500 bg-green-500/10 border-green-500/20' :
+                                        'text-yellow-500 bg-yellow-500/10 border-yellow-500/20'
+                                        }`}>{tx.status}</span>
                                 </div>
                             </div>
                         ))}
+                        {(!profile?.transactions || profile.transactions.length === 0) && (
+                            <p className="text-gray-500 text-sm">No recent transactions.</p>
+                        )}
                     </div>
                 </Card>
 
                 <Card>
                     <h3 className="text-xl font-bold text-white mb-6">Consumption History</h3>
+                    {/* Placeholder for real consumption data if separate from transactions */}
                     <div className="space-y-4">
-                        {mockConsumption.map((item, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 border-b border-white/5 last:border-0">
-                                <div className="text-gray-300">{item.date}</div>
-                                <div className="text-gray-500">{item.usage}</div>
-                                <div className="text-white font-medium">{item.cost}</div>
-                            </div>
-                        ))}
+                        <p className="text-gray-500 text-sm">Consumption data will appear here.</p>
                     </div>
                 </Card>
             </div>

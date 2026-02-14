@@ -1,15 +1,71 @@
-import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { Button } from "../components/ui/Button"
 import { Card } from "../components/ui/Card"
-import { Twitter } from "lucide-react"
+import { Twitter, Loader2 } from "lucide-react"
 
 export default function Login() {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState("")
 
-    const handleLogin = () => {
-        // Mock login logic
-        localStorage.setItem("authToken", "mock-token-123")
-        navigate("/dashboard/profile")
+    // API URL from env
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
+
+    useEffect(() => {
+        const token = searchParams.get("token")
+        if (token) {
+            verifyToken(token)
+        }
+    }, [searchParams])
+
+    const verifyToken = async (oneTimeToken) => {
+        setLoading(true)
+        try {
+            const res = await fetch(`${API_URL}/auth/login/x/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: oneTimeToken })
+            })
+
+            const data = await res.json()
+
+            if (data.success) {
+                localStorage.setItem("authToken", data.token)
+                localStorage.setItem("user", JSON.stringify(data.user))
+                navigate("/dashboard/profile")
+            } else {
+                setError(data.message || "Verification failed")
+            }
+        } catch (err) {
+            setError("Connection error. Please try again.")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleLogin = async () => {
+        setLoading(true)
+        setError("")
+        try {
+            const res = await fetch(`${API_URL}/auth/login/x/init`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ redirect: window.location.origin + '/login' })
+            })
+
+            const data = await res.json()
+
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                setError("Failed to initialize login")
+            }
+        } catch (err) {
+            setError("Connection error. Please try again.")
+            setLoading(false)
+        }
     }
 
     return (
@@ -27,11 +83,24 @@ export default function Login() {
                 <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
                 <p className="text-gray-400 mb-8">Sign in to manage your Clawbots</p>
 
+                {error && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm">
+                        {error}
+                    </div>
+                )}
+
                 <Button
                     onClick={handleLogin}
-                    className="w-full bg-[#1DA1F2] hover:bg-[#1a91da] text-white py-4 shadow-[0_0_20px_rgba(29,161,242,0.3)] border-none group"
+                    disabled={loading}
+                    className="w-full bg-[#1DA1F2] hover:bg-[#1a91da] text-white py-4 shadow-[0_0_20px_rgba(29,161,242,0.3)] border-none group relative"
                 >
-                    <Twitter className="mr-2 group-hover:scale-110 transition-transform" /> Sign in with Twitter
+                    {loading ? (
+                        <Loader2 className="animate-spin" />
+                    ) : (
+                        <>
+                            <Twitter className="mr-2 group-hover:scale-110 transition-transform" /> Sign in with Twitter
+                        </>
+                    )}
                 </Button>
             </Card>
 

@@ -173,3 +173,70 @@ Stop a running bot.
 Delete a bot permanently.
 
 **Response (204 No Content)**
+
+---
+
+## Admin API
+
+### `GET /admin/stats`
+Get aggregated system statistics.
+
+**Response:**
+```json
+{
+  "totalUsers": 1250,
+  "totalBots": 850,
+  "activeBots": 620,
+  "totalRevenue": 45200.00
+}
+```
+
+### `GET /admin/servers`
+Get status of all server nodes.
+
+**Response:**
+```json
+[
+  {
+    "id": "node-01",
+    "name": "US-East-1",
+    "status": "online",
+    "cpu": "45%",
+    "ram": "12GB/32GB",
+    "storage": "450GB/1TB",
+    "botCount": 120
+  }
+]
+```
+
+### `GET /admin/bots`
+Get a paginated list of all bots across all users.
+
+**Response:**
+```json
+[
+  {
+    "id": "bot_1",
+    "owner": "user_123", // Expanded user object in real app
+    "name": "Alpha Trader",
+    "status": "running"
+  }
+]
+```
+
+### `GET /admin/transactions`
+Get global transaction history.
+
+**Response:**
+```json
+[
+  {
+    "id": "tx_999",
+    "user": "user_123",
+    "amount": 100.00,
+    "type": "deposit",
+    "status": "completed",
+    "date": "2023-10-01T12:00:00Z"
+  }
+]
+```
