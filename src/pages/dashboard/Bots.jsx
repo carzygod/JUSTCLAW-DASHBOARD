@@ -12,6 +12,7 @@ export default function Bots() {
     const [selectedBot, setSelectedBot] = useState(null)
     const [bots, setBots] = useState([])
     const [loading, setLoading] = useState(true)
+    const [isDeploying, setIsDeploying] = useState(false)
 
     const [newBotValues, setNewBotValues] = useState({ name: "", telegramKey: "", telegramId: "" })
     const [editBotValues, setEditBotValues] = useState({ name: "", telegramKey: "", telegramId: "" })
@@ -39,6 +40,7 @@ export default function Bots() {
 
     const handleCreateBot = async (e) => {
         e.preventDefault()
+        setIsDeploying(true)
         try {
             await fetchApi('/bots', {
                 method: 'POST',
@@ -54,6 +56,8 @@ export default function Bots() {
             loadBots()
         } catch (err) {
             alert(err.message)
+        } finally {
+            setIsDeploying(false)
         }
     }
 
@@ -108,6 +112,15 @@ export default function Bots() {
 
     return (
         <div className="relative">
+            {/* Deployment Loading Overlay */}
+            {isDeploying && (
+                <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <Loader2 className="animate-spin text-claw-400 mb-4" size={48} />
+                    <h3 className="text-xl font-bold text-white">Deploying Bot...</h3>
+                    <p className="text-gray-400 text-sm mt-2">This may take a few moments.</p>
+                </div>
+            )}
+
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold text-white">Your Bots</h1>
                 <Button onClick={() => setShowModal(true)}>
