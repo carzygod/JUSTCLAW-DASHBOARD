@@ -12,7 +12,7 @@ export default function Bots() {
     const [selectedBot, setSelectedBot] = useState(null)
     const [bots, setBots] = useState([])
     const [loading, setLoading] = useState(true)
-    const [isDeploying, setIsDeploying] = useState(false)
+    const [processingMessage, setProcessingMessage] = useState(null)
 
     const [newBotValues, setNewBotValues] = useState({ name: "", telegramKey: "", telegramId: "" })
     const [editBotValues, setEditBotValues] = useState({ name: "", telegramKey: "", telegramId: "" })
@@ -40,7 +40,7 @@ export default function Bots() {
 
     const handleCreateBot = async (e) => {
         e.preventDefault()
-        setIsDeploying(true)
+        setProcessingMessage("Deploying Bot...")
         try {
             await fetchApi('/bots', {
                 method: 'POST',
@@ -57,7 +57,7 @@ export default function Bots() {
         } catch (err) {
             alert(err.message)
         } finally {
-            setIsDeploying(false)
+            setProcessingMessage(null)
         }
     }
 
@@ -73,6 +73,7 @@ export default function Bots() {
 
     const handleUpdateBot = async (e) => {
         e.preventDefault()
+        setProcessingMessage("Updating Configuration...")
         try {
             await fetchApi(`/bots/${selectedBot._id}`, {
                 method: 'PUT',
@@ -86,25 +87,34 @@ export default function Bots() {
             loadBots()
         } catch (err) {
             alert(err.message)
+        } finally {
+            setProcessingMessage(null)
         }
     }
 
     const handleAction = async (id, action) => {
+        const actionText = action.charAt(0).toUpperCase() + action.slice(1)
+        setProcessingMessage(`${actionText}ing Bot...`) // e.g. Starting Bot...
         try {
             await fetchApi(`/bots/${id}/${action}`, { method: 'POST' })
             loadBots()
         } catch (err) {
             alert(err.message)
+        } finally {
+            setProcessingMessage(null)
         }
     }
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
+        setProcessingMessage("Deleting Bot...")
         try {
             await fetchApi(`/bots/${id}`, { method: 'DELETE' })
             loadBots()
         } catch (err) {
             alert(err.message)
+        } finally {
+            setProcessingMessage(null)
         }
     }
 
@@ -112,12 +122,12 @@ export default function Bots() {
 
     return (
         <div className="relative">
-            {/* Deployment Loading Overlay */}
-            {isDeploying && (
+            {/* Global Processing Overlay */}
+            {processingMessage && (
                 <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
                     <Loader2 className="animate-spin text-claw-400 mb-4" size={48} />
-                    <h3 className="text-xl font-bold text-white">Deploying Bot...</h3>
-                    <p className="text-gray-400 text-sm mt-2">This may take a few moments.</p>
+                    <h3 className="text-xl font-bold text-white">{processingMessage}</h3>
+                    <p className="text-gray-400 text-sm mt-2">This may take a moment.</p>
                 </div>
             )}
 
